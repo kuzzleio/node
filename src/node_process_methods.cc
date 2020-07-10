@@ -157,6 +157,24 @@ static void Kill(const FunctionCallbackInfo<Value>& args) {
   args.GetReturnValue().Set(err);
 }
 
+static void Rss(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
+
+  size_t rss;
+  int err = uv_resident_set_memory(&rss);
+  if (err)
+    return env->ThrowUVException(err, "uv_resident_set_memory");
+
+  // Get the double array pointer from the Float64Array argument.
+  CHECK(args[0]->IsFloat64Array());
+  Local<Float64Array> array = args[0].As<Float64Array>();
+  CHECK_EQ(array->Length(), 1);
+  Local<ArrayBuffer> ab = array->Buffer();
+  double* fields = static_cast<double*>(ab->GetBackingStore()->Data());
+
+  fields[0] = rss;
+}
+
 static void MemoryUsage(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
@@ -521,6 +539,7 @@ static void InitializeProcessMethods(Local<Object> target,
 
   env->SetMethod(target, "umask", Umask);
   env->SetMethod(target, "_rawDebug", RawDebug);
+  env->SetMethod(target, "rss", Rss);
   env->SetMethod(target, "memoryUsage", MemoryUsage);
   env->SetMethod(target, "cpuUsage", CPUUsage);
   env->SetMethod(target, "resourceUsage", ResourceUsage);

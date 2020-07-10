@@ -47,5 +47,7 @@ for (let i = 0; i < numWorkers; ++i) {
                 'Unexpected memory overhead: ' +
                 util.inspect([startStats, finishStats]));
     }
+
+    assert.strictEqual(process.memoryUsage().rss, process.rss());
   });
 }
